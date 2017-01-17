@@ -1,6 +1,3 @@
-# Kivy-Pong
-https://kivy.org/docs/tutorials/pong.html
-
 # Pong done with kivy (https://kivy.org/docs/tutorials/pong.html)
 ###
 
@@ -18,7 +15,11 @@ from kivy.core.window import Window
 # classes
 ##
 class PongPaddle(Widget):
+	# for tracking the score
 	score = NumericProperty(0)
+
+	# velocity of the paddle on y-axis
+	paddle_vel = NumericProperty(0)
 
 	def bounce_ball(self, ball):
 		if self.collide_widget(ball):
@@ -48,20 +49,41 @@ class PongGame(Widget):
 		super(PongGame, self).__init__(**kwargs)
 		self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
 		self._keyboard.bind(on_key_down=self._on_keyboard_down)
+		self._keyboard.bind(on_key_up=self._on_keyboard_up)
 
 	def _keyboard_closed(self):
 		self._keyboard.unbind(on_key_down=self._on_keyboard_down)
 		self._keyboard = None
 
+	# modify this to adjust paddle velocity instead of position in order
+	#   to smooth out movement.  Will require resetting each paddle's
+	#   velocity to zero on keyboard_up.
 	def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
+		accel = 1
 		if keycode[1] == 'w':
-			self.player1.center_y += 10
+			self.player1.paddle_vel += accel
 		elif keycode[1] == 's':
-			self.player1.center_y -= 10
+			self.player1.paddle_vel -= accel
 		elif keycode[1] == 'up':
-			self.player2.center_y += 10
+			self.player2.paddle_vel += accel
 		elif keycode[1] == 'down':
-			self.player2.center_y -= 10
+			self.player2.paddle_vel -= accel
+		return True
+
+	# I kept getting an error that only 3 arguments were being supplied but 
+	#  that 5 were needed for on_keyboard_up and so I removed the last two...  
+	#  seems like a total hack, but it fixed the problem and it seems like a 
+	#  bug in kivy and there are no Google results to rely on so I'm ok with 
+	#  that.
+	def _on_keyboard_up(self, keyboard, keycode):
+		if keycode[1] == 'w':
+			self.player1.paddle_vel = 0
+		elif keycode[1] == 's':
+			self.player1.paddle_vel = 0
+		elif keycode[1] == 'up':
+			self.player2.paddle_vel = 0
+		elif keycode[1] == 'down':
+			self.player2.paddle_vel = 0
 		return True
 
 	def serve_ball(self, vel=(3, -1)):
@@ -88,11 +110,20 @@ class PongGame(Widget):
 			self.player1.score += 1
 			self.serve_ball(vel=(-3, -1))
 
+		# update players' paddle positions based on velocity,
+		#   which is modified with keyboard events, above
+		if self.player1.center_y + self.player1.paddle_vel > 0 and self.player1.center_y + self.player1.paddle_vel < self.height:
+			self.player1.center_y += self.player1.paddle_vel
+		if self.player2.center_y + self.player2.paddle_vel > 0 and self.player2.center_y + self.player2.paddle_vel < self.height:
+			self.player2.center_y += self.player2.paddle_vel
+
 		def on_touch_move(self, touch):
 			if touch.x < self.width / 3:
 				self.player1.center_y = touch.y
 			if touch.x > self.width - self.width / 3:
 				self.player2.center_y = touch.y
+
+		
 
 
 class PongApp(App):
