@@ -16,6 +16,7 @@ from kivy.properties import NumericProperty, ReferenceListProperty, ObjectProper
 from kivy.vector import Vector
 from kivy.clock import Clock
 from kivy.core.window import Window
+from kivy.core.audio import SoundLoader
 
 
 # globals
@@ -32,6 +33,9 @@ class PongPaddle(Widget):
 	# velocity of the paddle on y-axis
 	paddle_vel = NumericProperty(0)
 
+	snd_pbouce = ObjectProperty(None, allownone=True)
+	
+
 	def bounce_ball(self, ball):
 		if self.collide_widget(ball):
 			vx, vy = ball.velocity
@@ -39,6 +43,8 @@ class PongPaddle(Widget):
 			bounced = Vector(-1 * vx, vy)
 			vel = bounced * 1.2			
 			ball.velocity = vel.x, vel.y + offset
+			self.snd_pbounce = SoundLoader.load('paddle_bounce.wav')
+			self.snd_pbounce.play()
 
 
 class PongBall(Widget):
@@ -50,19 +56,21 @@ class PongBall(Widget):
 	def move(self):
 		self.pos = Vector(*self.velocity) + self.pos
 
-
 class PongGame(Widget):
 	global paddle_height
 
 	ball = ObjectProperty(None)
 	player1 = ObjectProperty(None)
 	player2 = ObjectProperty(None)
-
+	snd_serve = ObjectProperty(None, allownone=True)
+	snd_wbounce = ObjectProperty(None, allownone=True)
+		
 	def __init__(self, **kwargs):
 		super(PongGame, self).__init__(**kwargs)
 		self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
 		self._keyboard.bind(on_key_down=self._on_keyboard_down)
 		self._keyboard.bind(on_key_up=self._on_keyboard_up)
+		
 
 	def _keyboard_closed(self):
 		self._keyboard.unbind(on_key_down=self._on_keyboard_down)
@@ -107,7 +115,10 @@ class PongGame(Widget):
 	def serve_ball(self, vel=(3, -1)):
 		self.ball.center= self.center
 		self.ball.velocity = vel
-
+		if self.snd_serve is None:
+			self.snd_serve = SoundLoader.load('sound1.wav')
+		self.snd_serve.play()
+		
 	def update(self, dt):
 		# call ball.move, etc.
 		self.ball.move()
@@ -119,13 +130,21 @@ class PongGame(Widget):
 		# bounce off top and bottom
 		if(self.ball.y < 0) or (self.ball.top > self.height):
 			self.ball.velocity_y *= -1
+			if self.snd_wbounce is None:
+				self.snd_wbounce = SoundLoader.load('wall_bounce.wav')
+			self.snd_wbounce.play()
 
 		# gutters for points
 		if self.ball.x < self.x:
 			self.player2.score += 1
+			if self.snd_score is None:
+				self.snd_score = SoundLoader.load('score.wav')
+			self.snd_score.play()
 			self.serve_ball(vel=(3, 1))
 		if self.ball.x > self.width:
 			self.player1.score += 1
+			self.snd_score = SoundLoader.load('score.wav')
+			self.snd_score.play()
 			self.serve_ball(vel=(-3, 1))
 
 		# Update players' paddle positions based on velocity,
@@ -145,14 +164,14 @@ class PongGame(Widget):
 
 		
 
-
 class PongApp(App):
 	def build(self):
 		game = PongGame()
 		game.serve_ball()
 		Clock.schedule_interval(game.update, 1.0 / 60.0)
+		self.snd_serve = SoundLoader.load('sound1.wav')
+		self.snd_serve.play()		
 		return game
-
 
 
 # game loop
