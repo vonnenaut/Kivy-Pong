@@ -1,6 +1,13 @@
 # Pong done with kivy (https://kivy.org/docs/tutorials/pong.html)
 ###
 
+# TO-DO:
+##
+"""
+-Add sound effects to paddle bounce, wall bounce, scoring of point, beginning of game
+-See if paddle controls can/should(?) be tweaked further
+"""
+
 # imports
 ##
 from kivy.app import App
@@ -10,6 +17,10 @@ from kivy.vector import Vector
 from kivy.clock import Clock
 from kivy.core.window import Window
 
+
+# globals
+##
+paddle_height = 200
 
 
 # classes
@@ -26,7 +37,7 @@ class PongPaddle(Widget):
 			vx, vy = ball.velocity
 			offset = (ball.center_y - self.center_y) / (self.height / 2)
 			bounced = Vector(-1 * vx, vy)
-			vel = bounced * 1.1			
+			vel = bounced * 1.2			
 			ball.velocity = vel.x, vel.y + offset
 
 
@@ -41,6 +52,8 @@ class PongBall(Widget):
 
 
 class PongGame(Widget):
+	global paddle_height
+
 	ball = ObjectProperty(None)
 	player1 = ObjectProperty(None)
 	player2 = ObjectProperty(None)
@@ -59,15 +72,20 @@ class PongGame(Widget):
 	#   to smooth out movement.  Will require resetting each paddle's
 	#   velocity to zero on keyboard_up.
 	def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
-		accel = 1
+		accel = 2
+
 		if keycode[1] == 'w':
-			self.player1.paddle_vel += accel
+			if accel < 3:
+				self.player1.paddle_vel += accel
 		elif keycode[1] == 's':
-			self.player1.paddle_vel -= accel
+			if accel < 3:
+				self.player1.paddle_vel -= accel
 		elif keycode[1] == 'up':
-			self.player2.paddle_vel += accel
+			if accel < 3:
+				self.player2.paddle_vel += accel
 		elif keycode[1] == 'down':
-			self.player2.paddle_vel -= accel
+			if accel < 3:
+				self.player2.paddle_vel -= accel
 		return True
 
 	# I kept getting an error that only 3 arguments were being supplied but 
@@ -105,18 +123,20 @@ class PongGame(Widget):
 		# gutters for points
 		if self.ball.x < self.x:
 			self.player2.score += 1
-			self.serve_ball(vel=(3, -1))
+			self.serve_ball(vel=(3, 1))
 		if self.ball.x > self.width:
 			self.player1.score += 1
-			self.serve_ball(vel=(-3, -1))
+			self.serve_ball(vel=(-3, 1))
 
-		# update players' paddle positions based on velocity,
-		#   which is modified with keyboard events, above
-		if self.player1.center_y + self.player1.paddle_vel > 0 and self.player1.center_y + self.player1.paddle_vel < self.height:
+		# Update players' paddle positions based on velocity,
+		#   which is modified with keyboard events, above, and
+		#   and keep paddle from going off the screen. 
+		if self.player1.center_y + self.player1.paddle_vel - (0.5 * paddle_height) > 0 and (0.5 * paddle_height) + self.player1.center_y + self.player1.paddle_vel < self.height:
 			self.player1.center_y += self.player1.paddle_vel
-		if self.player2.center_y + self.player2.paddle_vel > 0 and self.player2.center_y + self.player2.paddle_vel < self.height:
+		if self.player2.center_y + self.player2.paddle_vel - (0.5 * paddle_height) > 0 and (0.5 * paddle_height) + self.player2.center_y + self.player2.paddle_vel < self.height:
 			self.player2.center_y += self.player2.paddle_vel
 
+		# controls for a touch screen
 		def on_touch_move(self, touch):
 			if touch.x < self.width / 3:
 				self.player1.center_y = touch.y
