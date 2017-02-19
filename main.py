@@ -3,6 +3,7 @@
 
 # imports
 ##
+import kivy
 from kivy.app import App
 from kivy.uix.widget import Widget
 from kivy.properties import NumericProperty, ReferenceListProperty, ObjectProperty
@@ -11,6 +12,8 @@ from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.core.audio import SoundLoader
 
+# checks that user has the required version of kivy installed before running the program, giving an error message and stopping execution if version requirement is not met
+kivy.require('1.9.1')
 
 # globals
 ##
