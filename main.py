@@ -1,13 +1,6 @@
 # Pong done with kivy (https://kivy.org/docs/tutorials/pong.html)
 ###
 
-# TO-DO:
-##
-"""
--Add sound effects to paddle bounce, wall bounce, scoring of point, beginning of game
--See if paddle controls can/should(?) be tweaked further
-"""
-
 # imports
 ##
 from kivy.app import App
@@ -76,25 +69,30 @@ class PongGame(Widget):
 		self._keyboard.unbind(on_key_down=self._on_keyboard_down)
 		self._keyboard = None
 
-	# modify this to adjust paddle velocity instead of position in order
-	#   to smooth out movement.  Will require resetting each paddle's
-	#   velocity to zero on keyboard_up.
 	def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
-		accel = 2
+		""" handles keyboard input (w, s, up and down arrows for player 1 and player 2, respectively) """
+		inputs = {'w': self.paddle1_faster,
+				  's': self.paddle1_slower,
+				  'up': self.paddle2_faster, 
+				  'down': self.paddle2_slower}
 
-		if keycode[1] == 'w':
-			if accel < 3:
-				self.player1.paddle_vel += accel
-		elif keycode[1] == 's':
-			if accel < 3:
-				self.player1.paddle_vel -= accel
-		elif keycode[1] == 'up':
-			if accel < 3:
-				self.player2.paddle_vel += accel
-		elif keycode[1] == 'down':
-			if accel < 3:
-				self.player2.paddle_vel -= accel
+		for i in inputs:
+			if keycode[1] in inputs:
+				inputs[keycode[1]]()
+
 		return True
+
+	def paddle1_faster(self):
+		self.player1.paddle_vel += 2
+
+	def paddle1_slower(self):
+		self.player1.paddle_vel -= 2
+
+	def paddle2_faster(self):
+		self.player2.paddle_vel += 2
+
+	def paddle2_slower(self):
+		self.player2.paddle_vel -= 2
 
 	# I kept getting an error that only 3 arguments were being supplied but 
 	#  that 5 were needed for on_keyboard_up and so I removed the last two...  
