@@ -98,10 +98,8 @@ class PongGame(Widget):
 		self.player2.paddle_vel -= 2
 
 	# I kept getting an error that only 3 arguments were being supplied but 
-	#  that 5 were needed for on_keyboard_up and so I removed the last two...  
-	#  seems like a total hack, but it fixed the problem and it seems like a 
-	#  bug in kivy and there are no Google results to rely on so I'm ok with 
-	#  that.
+	#  that 5 were needed for on_keyboard_up and so I removed the last two.
+	# TO-DO:  investigate this further.
 	def _on_keyboard_up(self, keyboard, keycode):
 		if keycode[1] == 'w':
 			self.player1.paddle_vel = 0
@@ -149,8 +147,8 @@ class PongGame(Widget):
 			self.serve_ball(vel=(-3, 1))
 
 		# Update players' paddle positions based on velocity,
-		#   which is modified with keyboard events, above, and
-		#   and keep paddle from going off the screen. 
+		#   which is modified with keyboard events above and
+		#   keep paddle from going off the screen. 
 		if self.player1.center_y + self.player1.paddle_vel - (0.5 * paddle_height) > 0 and (0.5 * paddle_height) + self.player1.center_y + self.player1.paddle_vel < self.height:
 			self.player1.center_y += self.player1.paddle_vel
 		if self.player2.center_y + self.player2.paddle_vel - (0.5 * paddle_height) > 0 and (0.5 * paddle_height) + self.player2.center_y + self.player2.paddle_vel < self.height:
